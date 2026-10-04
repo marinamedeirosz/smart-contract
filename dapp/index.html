@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IfalCoin - Saldo</title>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.17.0/dist/ethers.umd.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 40px auto; padding: 0 16px; }
+    input { width: 100%; padding: 8px; margin: 4px 0 12px; box-sizing: border-box; }
+    button { padding: 8px 16px; cursor: pointer; }
+    #resultado { margin-top: 20px; font-size: 20px; }
+  </style>
+</head>
+<body>
+  <h1>IfalCoin (IFAL)</h1>
+  <p>Consulte o saldo de IFAL de um endereço.</p>
+
+  <label>Endereço do contrato</label>
+  <input id="contrato" value="0x5FbDB2315678afecb367f032d93F642f64180aa3">
+
+  <label>Endereço da carteira</label>
+  <input id="carteira" placeholder="0x...">
+
+  <button id="conectar">Conectar MetaMask</button>
+  <button id="consultar">Consultar saldo</button>
+
+  <p id="resultado"></p>
+
+  <script>
+    const abi = [
+      "function symbol() view returns (string)",
+      "function decimals() view returns (uint8)",
+      "function balanceOf(address) view returns (uint256)"
+    ];
+
+    let provider;
+
+    document.getElementById("conectar").onclick = async () => {
+      if (!window.ethereum) {
+        alert("Instale a MetaMask");
+        return;
+      }
+      provider = new ethers.BrowserProvider(window.ethereum);
+      const contas = await provider.send("eth_requestAccounts", []);
+      document.getElementById("carteira").value = contas[0];
+    };
+
+    document.getElementById("consultar").onclick = async () => {
+      const resultado = document.getElementById("resultado");
+      try {
+        if (!provider) provider = new ethers.BrowserProvider(window.ethereum);
+        const contrato = document.getElementById("contrato").value;
+        const carteira = document.getElementById("carteira").value;
+        const token = new ethers.Contract(contrato, abi, provider);
+
+        const saldo = await token.balanceOf(carteira);
+        const decimais = await token.decimals();
+        const simbolo = await token.symbol();
+
+        resultado.textContent = "Saldo: " + ethers.formatUnits(saldo, decimais) + " " + simbolo;
+      } catch (erro) {
+        resultado.textContent = "Erro: " + (erro.shortMessage || erro.message);
+      }
+    };
+  </script>
+</body>
+</html>
