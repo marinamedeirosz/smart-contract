@@ -34,4 +34,35 @@ describe("IfalCoin", function () {
       token.connect(outraConta).mint(outraConta.address, 100n)
     ).to.be.revert(ethers);
   });
+
+  describe("burn (desafio extra)", function () {
+    it("permite ao titular queimar os próprios tokens", async function () {
+      const { token, dono } = await networkHelpers.loadFixture(implantarFixture);
+      const fornecimentoAntes = await token.totalSupply();
+      const quantidade = ethers.parseUnits("1000", await token.decimals());
+
+      await expect(token.burn(quantidade))
+        .to.emit(token, "Transfer")
+        .withArgs(dono.address, ethers.ZeroAddress, quantidade);
+
+      expect(await token.totalSupply()).to.equal(fornecimentoAntes - quantidade);
+      expect(await token.balanceOf(dono.address)).to.equal(fornecimentoAntes - quantidade);
+    });
+
+    it("só permite burnFrom com allowance aprovada", async function () {
+      const { token, dono, outraConta } = await networkHelpers.loadFixture(implantarFixture);
+      const fornecimentoAntes = await token.totalSupply();
+      const quantidade = 500n;
+
+      await expect(
+        token.connect(outraConta).burnFrom(dono.address, quantidade)
+      ).to.be.revertedWithCustomError(token, "ERC20InsufficientAllowance");
+
+      await token.approve(outraConta.address, quantidade);
+      await token.connect(outraConta).burnFrom(dono.address, quantidade);
+
+      expect(await token.allowance(dono.address, outraConta.address)).to.equal(0n);
+      expect(await token.totalSupply()).to.equal(fornecimentoAntes - quantidade);
+    });
+  });
 });
