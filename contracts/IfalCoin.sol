@@ -2,9 +2,10 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract IfalCoin is ERC20, Ownable {
+contract IfalCoin is ERC20, ERC20Burnable, Ownable {
     constructor(uint256 fornecimentoInicial)
         ERC20("IfalCoin", "IFAL")
         Ownable(msg.sender)
